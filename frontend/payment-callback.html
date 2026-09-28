@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ana tabbatarwa... - AMDATA</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container" style="padding-top:35vh; text-align:center;">
+  <div class="brand">AM<span>DATA</span></div>
+  <div class="subtitle" id="status">Ana tabbatar da biyan kudinka...</div>
+</div>
+<script src="js/app.js"></script>
+<script>
+Auth.requireLogin();
+const params = new URLSearchParams(window.location.search);
+const reference = params.get('reference') || params.get('trxref');
+
+(async () => {
+  const statusEl = document.getElementById('status');
+  if (!reference) { statusEl.textContent = 'Ba a samu bayanin ciniki ba'; return; }
+  try {
+    const res = await api(`/wallet/verify/${reference}`);
+    if (res.status === 'success' || res.status === 'already_credited') {
+      statusEl.textContent = 'An caje wallet dinka cikin nasara ✅';
+    } else {
+      statusEl.textContent = 'Biyan kudi bai yi nasara ba ❌';
+    }
+  } catch (ex) {
+    statusEl.textContent = 'An samu matsala wajen tabbatarwa';
+  }
+  setTimeout(() => window.location.href = '/dashboard.html', 2500);
+})();
+</script>
+</body>
+</html>

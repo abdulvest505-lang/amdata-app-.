@@ -1,0 +1,126 @@
+:root {
+  --bg: #0f172a;
+  --surface: #16213e;
+  --surface-2: #1c2b4a;
+  --primary: #22c55e;
+  --primary-dark: #16a34a;
+  --danger: #ef4444;
+  --text: #e6ebf5;
+  --text-dim: #94a3b8;
+  --border: #27324a;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 18px 90px;
+}
+
+.brand {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.brand span { color: var(--text); }
+
+.subtitle { color: var(--text-dim); text-align: center; margin-bottom: 28px; font-size: 14px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+label { display: block; font-size: 13px; color: var(--text-dim); margin: 14px 0 6px; }
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 15px;
+}
+input:focus, select:focus { outline: 2px solid var(--primary); }
+
+button.btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--primary);
+  color: #05210f;
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 18px;
+  cursor: pointer;
+}
+button.btn:active { background: var(--primary-dark); }
+button.btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+button.btn.danger { background: var(--danger); color: #fff; }
+
+.error { color: var(--danger); font-size: 13px; margin-top: 10px; text-align: center; }
+.success { color: var(--primary); font-size: 13px; margin-top: 10px; text-align: center; }
+
+.link { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-dim); }
+.link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+.balance-card {
+  background: linear-gradient(135deg, #16a34a, #0f766e);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.balance-card .label { font-size: 13px; opacity: 0.85; }
+.balance-card .amount { font-size: 32px; font-weight: 800; margin-top: 4px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.network-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+.network-btn {
+  padding: 12px 4px; text-align: center; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); font-size: 12px; font-weight: 700; cursor: pointer; color: var(--text);
+}
+.network-btn.active { border-color: var(--primary); background: rgba(34,197,94,0.15); color: var(--primary); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 6px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text-dim); font-weight: 600; }
+
+.badge { padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge.success { background: rgba(34,197,94,0.15); color: var(--primary); }
+.badge.pending { background: rgba(234,179,8,0.15); color: #eab308; }
+.badge.failed { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; justify-content: space-around; padding: 10px 0;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.bottom-nav a { color: var(--text-dim); text-decoration: none; font-size: 12px; text-align: center; }
+.bottom-nav a.active { color: var(--primary); }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.stat-box .num { font-size: 20px; font-weight: 800; }
+.stat-box .lbl { font-size: 12px; color: var(--text-dim); }

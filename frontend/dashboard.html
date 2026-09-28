@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard - AMDATA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div style="display:flex; justify-content:space-between; align-items:center; padding-top:16px;">
+    <div class="brand" style="text-align:left; margin:0; font-size:20px;">AM<span>DATA</span></div>
+    <button class="btn danger" style="width:auto; margin:0; padding:8px 14px; font-size:13px;" onclick="Auth.logout()">Fita</button>
+  </div>
+
+  <div class="balance-card" style="margin-top:18px;">
+    <div class="label">Ma'auni na Wallet</div>
+    <div class="amount" id="balance">₦0.00</div>
+    <div class="grid-2" style="margin-top:14px;">
+      <button class="btn" style="margin:0; background:#fff; color:#0f172a;" onclick="document.getElementById('fundModal').style.display='flex'">+ Caje Wallet</button>
+      <button class="btn secondary" style="margin:0; background:rgba(255,255,255,0.15); color:#fff; border-color:rgba(255,255,255,0.3);" onclick="loadTransactions()">Tarihi</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Sayi Data</h3>
+    <label>Zabi Network</label>
+    <div class="network-grid" id="networkGrid">
+      <div class="network-btn" data-net="mtn">MTN</div>
+      <div class="network-btn" data-net="airtel">Airtel</div>
+      <div class="network-btn" data-net="glo">Glo</div>
+      <div class="network-btn" data-net="9mobile">9mobile</div>
+    </div>
+
+    <label>Lambar Waya</label>
+    <input type="tel" id="buyPhone" placeholder="080XXXXXXXX">
+
+    <label>Zabi Plan</label>
+    <select id="planSelect"><option value="">-- Zabi network da farko --</option></select>
+
+    <button class="btn" id="buyBtn">Sayi Yanzu</button>
+    <div class="error" id="buyErr" style="display:none;"></div>
+    <div class="success" id="buySuccess" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Tarihin Ciniki</h3>
+    <div id="txList" style="max-height:300px; overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- Fund wallet modal -->
+<div id="fundModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:50;">
+  <div class="card" style="width:85%; max-width:380px; margin:0;">
+    <h3 style="margin-top:0;">Caje Wallet</h3>
+    <label>Adadin Kudi (₦)</label>
+    <input type="number" id="fundAmount" min="100" placeholder="1000">
+    <button class="btn" id="fundBtn">Ci gaba zuwa Paystack</button>
+    <button class="btn secondary" onclick="document.getElementById('fundModal').style.display='none'">Soke</button>
+    <div class="error" id="fundErr" style="display:none;"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+Auth.requireLogin();
+let selectedNetwork = null;
+let selectedPlans = [];
+
+async function loadBalance() {
+  const data = await api('/wallet');
+  document.getElementById('balance').textContent = fmtNaira(data.balance);
+}
+
+async function loadTransactions() {
+  const data = await api('/wallet/transactions');
+  const list = document.getElementById('txList');
+  if (!data.transactions.length) {
+    list.innerHTML = '<div style="color:var(--text-dim); font-size:13px; padding:10px 0;">Babu ciniki tukuna</div>';
+    return;
+  }
+  list.innerHTML = data.transactions.map(tx => `
+    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px; font-weight:600;">${tx.source.replace('_',' ')}</div>
+        <div style="font-size:11px; color:var(--text-dim);">${fmtDate(tx.created_at)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700; color:${tx.type === 'credit' ? 'var(--primary)' : 'var(--danger)'};">
+          ${tx.type === 'credit' ? '+' : '-'}${fmtNaira(tx.amount)}
+        </div>
+        <span class="badge ${tx.status}">${tx.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.querySelectorAll('.network-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    document.querySelectorAll('.network-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedNetwork = btn.dataset.net;
+    const select = document.getElementById('planSelect');
+    select.innerHTML = '<option>Ana lodin plans...</option>';
+    try {
+      const data = await api(`/data/plans/${selectedNetwork}`);
+      selectedPlans = data.content?.varations || data.varations || [];
+      select.innerHTML = selectedPlans.map(p =>
+        `<option value="${p.variation_code}" data-amount="${p.variation_amount}">${p.name} - ₦${p.variation_amount}</option>`
+      ).join('') || '<option value="">Babu plans a yanzu</option>';
+    } catch (ex) {
+      select.innerHTML = '<option value="">An kasa daukar plans</option>';
+    }
+  });
+});
+
+document.getElementById('buyBtn').addEventListener('click', async () => {
+  const err = document.getElementById('buyErr');
+  const ok = document.getElementById('buySuccess');
+  err.style.display = 'none'; ok.style.display = 'none';
+
+  const phone = document.getElementById('buyPhone').value.trim();
+  const select = document.getElementById('planSelect');
+  const variation_code = select.value;
+  const amount = select.selectedOptions[0]?.dataset.amount;
+
+  if (!selectedNetwork || !phone || !variation_code) {
+    err.textContent = 'Cika dukkan fanni kafin ka ci gaba';
+    err.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await api('/data/purchase', {
+      method: 'POST',
+      body: { network: selectedNetwork, phone, variation_code, amount: Number(amount) },
+    });
+    if (res.success) {
+      ok.textContent = 'An sayi data cikin nasara! ✅';
+      ok.style.display = 'block';
+    } else {
+      err.textContent = 'Ciniki ya kasa, an mayar da kudinka wallet';
+      err.style.display = 'block';
+    }
+    loadBalance();
+    loadTransactions();
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.style.display = 'block';
+  }
+});
+
+document.getElementById('fundBtn').addEventListener('click', async () => {
+  const err = document.getElementById('fundErr');
+  err.style.display = 'none';
+  const amount = Number(document.getElementById('fundAmount').value);
+  if (!amount || amount < 100) {
+    err.textContent = 'Shigar da adadi mai inganci (akalla ₦100)';
+    err.style.display = 'block';
+    return;
+  }
+  try {
+    const res = await api('/wallet/fund', { method: 'POST', body: { amount } });
+    window.location.href = res.authorization_url;
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.style.display = 'block';
+  }
+});
+
+loadBalance();
+loadTransactions();
+</script>
+</body>
+</html>

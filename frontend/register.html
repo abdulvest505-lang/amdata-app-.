@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yi Rajista - AMDATA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div style="height:40px"></div>
+  <div class="brand">AM<span>DATA</span></div>
+  <div class="subtitle">Bude sabon account</div>
+
+  <div class="card">
+    <form id="regForm">
+      <label>Cikakken Suna</label>
+      <input type="text" id="full_name" required placeholder="Musa Ibrahim">
+
+      <label>Imel</label>
+      <input type="email" id="email" required placeholder="example@email.com">
+
+      <label>Lambar Waya</label>
+      <input type="tel" id="phone" required placeholder="080XXXXXXXX">
+
+      <label>Password</label>
+      <input type="password" id="password" required placeholder="Akalla haruffa 6">
+
+      <button class="btn" type="submit">Yi Rajista</button>
+      <div class="error" id="err" style="display:none;"></div>
+    </form>
+  </div>
+
+  <div class="link">Kana da account tuni? <a href="/login.html">Shiga</a></div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  try {
+    const data = await api('/auth/register', {
+      method: 'POST',
+      auth: false,
+      body: {
+        full_name: document.getElementById('full_name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        password: document.getElementById('password').value,
+      },
+    });
+    Auth.setToken(data.token);
+    Auth.setUser(data.user);
+    window.location.href = '/dashboard.html';
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

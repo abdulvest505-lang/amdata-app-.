@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin - AMDATA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div style="display:flex; justify-content:space-between; align-items:center; padding-top:16px;">
+    <div class="brand" style="text-align:left; margin:0; font-size:20px;">AM<span>DATA</span> <span style="font-size:12px; color:var(--text-dim);">Admin</span></div>
+    <button class="btn danger" style="width:auto; margin:0; padding:8px 14px; font-size:13px;" onclick="Auth.logout()">Fita</button>
+  </div>
+
+  <div class="stat-grid" style="margin-top:18px;">
+    <div class="stat-box"><div class="num" id="statUsers">-</div><div class="lbl">Duk Users</div></div>
+    <div class="stat-box"><div class="num" id="statWallets">-</div><div class="lbl">Jimillar Wallet</div></div>
+    <div class="stat-box"><div class="num" id="statToday">-</div><div class="lbl">Sayarwa Yau</div></div>
+    <div class="stat-box"><div class="num" id="statTotal">-</div><div class="lbl">Jimillar Sayarwa</div></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Users</h3>
+    <div id="usersList" style="max-height:320px; overflow-y:auto;"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Sabbin Oda (Orders)</h3>
+    <div id="ordersList" style="max-height:320px; overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- Adjust wallet modal -->
+<div id="adjModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:50;">
+  <div class="card" style="width:85%; max-width:380px; margin:0;">
+    <h3 style="margin-top:0;" id="adjTitle">Daidaita Wallet</h3>
+    <label>Adadi (rubuta -100 don cirewa)</label>
+    <input type="number" id="adjAmount" placeholder="1000">
+    <label>Bayani</label>
+    <input type="text" id="adjNote" placeholder="Dalili">
+    <button class="btn" id="adjSubmit">Tabbatar</button>
+    <button class="btn secondary" onclick="document.getElementById('adjModal').style.display='none'">Soke</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+Auth.requireAdmin();
+let adjUserId = null;
+
+async function loadStats() {
+  const s = await api('/admin/stats');
+  document.getElementById('statUsers').textContent = s.users_count;
+  document.getElementById('statWallets').textContent = fmtNaira(s.total_wallet_balance);
+  document.getElementById('statToday').textContent = fmtNaira(s.sales_today.total);
+  document.getElementById('statTotal').textContent = fmtNaira(s.sales_total.total);
+}
+
+async function loadUsers() {
+  const data = await api('/admin/users');
+  document.getElementById('usersList').innerHTML = data.users.map(u => `
+    <div style="padding:10px 0; border-bottom:1px solid var(--border);">
+      <div style="display:flex; justify-content:space-between;">
+        <div>
+          <div style="font-weight:600; font-size:13px;">${u.full_name}</div>
+          <div style="font-size:11px; color:var(--text-dim);">${u.email} · ${u.phone}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700; font-size:13px;">${fmtNaira(u.balance)}</div>
+          <span class="badge ${u.is_active ? 'success' : 'failed'}">${u.is_active ? 'active' : 'suspended'}</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn secondary" style="margin:0; padding:6px; font-size:11px;" onclick="openAdjust(${u.id}, '${u.full_name}')">Daidaita Wallet</button>
+        <button class="btn ${u.is_active ? 'danger' : ''}" style="margin:0; padding:6px; font-size:11px;" onclick="toggleStatus(${u.id}, ${!u.is_active})">${u.is_active ? 'Dakatar' : 'Kunna'}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadOrders() {
+  const data = await api('/admin/orders');
+  document.getElementById('ordersList').innerHTML = data.orders.slice(0, 30).map(o => `
+    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px; font-weight:600;">${o.full_name} · ${o.network.toUpperCase()}</div>
+        <div style="font-size:11px; color:var(--text-dim);">${o.phone} · ${fmtDate(o.created_at)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;">${fmtNaira(o.amount)}</div>
+        <span class="badge ${o.status}">${o.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAdjust(id, name) {
+  adjUserId = id;
+  document.getElementById('adjTitle').textContent = `Daidaita Wallet - ${name}`;
+  document.getElementById('adjModal').style.display = 'flex';
+}
+
+document.getElementById('adjSubmit').addEventListener('click', async () => {
+  const amount = Number(document.getElementById('adjAmount').value);
+  const note = document.getElementById('adjNote').value;
+  if (!amount) return;
+  await api(`/admin/users/${adjUserId}/adjust-wallet`, { method: 'POST', body: { amount, note } });
+  document.getElementById('adjModal').style.display = 'none';
+  loadUsers(); loadStats();
+});
+
+async function toggleStatus(id, newStatus) {
+  await api(`/admin/users/${id}/status`, { method: 'PATCH', body: { is_active: newStatus } });
+  loadUsers();
+}
+
+loadStats(); loadUsers(); loadOrders();
+</script>
+</body>
+</html>

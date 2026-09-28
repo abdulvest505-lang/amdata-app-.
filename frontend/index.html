@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AMDATA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container" style="padding-top:40vh; text-align:center;">
+  <div class="brand">AM<span>DATA</span></div>
+  <div class="subtitle">Ana lodi...</div>
+</div>
+<script src="js/app.js"></script>
+<script>
+  const token = Auth.getToken();
+  const user = Auth.getUser();
+  if (token && user?.role === 'admin') window.location.href = '/admin.html';
+  else if (token) window.location.href = '/dashboard.html';
+  else window.location.href = '/login.html';
+</script>
+</body>
+</html>

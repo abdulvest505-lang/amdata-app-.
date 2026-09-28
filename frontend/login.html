@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shiga - AMDATA</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <div style="height:40px"></div>
+  <div class="brand">AM<span>DATA</span></div>
+  <div class="subtitle">Saye da sayar da Data cikin sauki</div>
+
+  <div class="card">
+    <form id="loginForm">
+      <label>Imel ko Lambar Waya</label>
+      <input type="text" id="identifier" required placeholder="example@email.com">
+
+      <label>Password</label>
+      <input type="password" id="password" required placeholder="••••••••">
+
+      <button class="btn" type="submit">Shiga</button>
+      <div class="error" id="err" style="display:none;"></div>
+    </form>
+  </div>
+
+  <div class="link">Ba ka da account? <a href="/register.html">Yi rajista</a></div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  try {
+    const data = await api('/auth/login', {
+      method: 'POST',
+      auth: false,
+      body: {
+        identifier: document.getElementById('identifier').value.trim(),
+        password: document.getElementById('password').value,
+      },
+    });
+    Auth.setToken(data.token);
+    Auth.setUser(data.user);
+    window.location.href = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
