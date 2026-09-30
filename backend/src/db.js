@@ -29,7 +29,7 @@ async function initDb() {
     );
 
     -- Every wallet movement (funding, purchase debit, refund) is logged here.
-    -- This is the ledger: balance in `wallets` should always equal the sum of this table.
+    -- This is the ledger: balance in wallets table should always equal the sum of this table.
     CREATE TABLE IF NOT EXISTS wallet_transactions (
       id SERIAL PRIMARY KEY,
       reference VARCHAR(100) UNIQUE NOT NULL,
